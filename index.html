@@ -21,7 +21,7 @@
          <div class="container">
             <div class="row align-items-center">
                <div class="col-4 col-md-6">
-                  <a href="index.html"><img src="images/logo-white.svg" class="img-fluid" width="200px"></a>
+                  <a href="/"><img src="images/logo-white.svg" class="img-fluid" width="200px"></a>
                </div>
                
               
@@ -205,7 +205,7 @@
             </div>
          </div>
       </footer>
-   <script data-cfasync="false" src="cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script></body>
+   <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script></body>
 </html>
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
 <script>
@@ -240,29 +240,86 @@
   });
   
 });*/
-   $(document).ready(function(){
-  $(".signupbutton").click(function(){
-    var mobileno = $('.mobileno').val();
-    var valid = false;
-    $('.requiredfield').html('');
-    if(mobileno == ''){
-        $('.mobileno_req').html('Mobile no required');
-        valid = true;
-    }
-    var phoneRegex = /^([6-9][0-9]{9})$/; ;
-    if(phoneRegex.test(mobileno)) {
-    } else {
-      $('.mobileno_req').html('Enter a valid mobile no');
-      valid = true;
-    }
-    if($(".clickcheckbox").prop('checked') == false){
-        $('.checkbox_req').html('Confirm checkbox required');
-        valid = true;
-        $('input[type="checkbox.clickcheckbox"]').eq(0).focus();
-    }
-    if(valid == false){
-        $('#signupform').submit();
-    }
+$(document).ready(function(){
+
+   $(".mobileno").on("input", function () {
+        mobilefield();
+    });
+   
+    $(".clickcheckbox").on("input", function () {
+        checkboxField();
+    });
+
+   async function mobilefield() {
+       let isValid = true;
+       var mobileno = $('.mobileno').val();
+
+       if (mobileno === '') {
+           $('.mobileno_req').text('Enter mobile number');
+           isValid = false;
+       } else if (mobileno.length !== 10) {
+           $('.mobileno_req').text('Mobile number must be exactly 10 digits.');
+           isValid = false;
+       } else if (!/^[6-9]\d{9}$/.test(mobileno)) {
+           $('.mobileno_req').text('Please enter a valid mobile number.');
+           isValid = false;
+       } else {
+           $('.mobileno_req').text('');
+           // Return a promise that resolves once the AJAX call completes
+           isValid = await new Promise((resolve) => {
+               $.ajax({  
+                  url: "mobilecheck.php",  
+                  method: "POST",  
+                  data: { mobileno: mobileno },  
+                  dataType: "text",  
+                  success: function(data) {  
+                     if(data == '1'){
+                        resolve(false); // Mobile number already exists
+                        $('.mobileno_req').text('Mobile number already exists.');
+                        $('.mobileno').val('');
+                     } else {
+                        resolve(true); // Mobile number is valid
+                     }
+                  },
+                  error: function() {
+                     resolve(false); // Handle AJAX error case
+                     $('.mobileno_req').text('Error checking mobile number.');
+                  }
+               });
+           });
+       }
+
+       return isValid;
+   }
+
+    function checkboxField() {
+      let isValid = true;
+
+      if (!$('.clickcheckbox').is(':checked')) {
+        $('.checkbox_req').text('You must agree to the terms and conditions.');
+        isValid = false;
+      } else {
+        $('.checkbox_req').text('');
+      }
+
+      return isValid;
+   }
+
+  $(".signupbutton").click(async function(){
+    
+    event.preventDefault(); // Prevent form submission
+
+     let isValid = true;
+     isValid = await mobilefield() && isValid;
+     isValid = checkboxField() && isValid;
+
+
+     if (isValid) {
+      $('.signupbutton').addClass("clickdisable");
+       $(this).attr("disabled", "disabled");
+         $('#signupform').submit();
+     }
+
   });
 }); 
 </script>
