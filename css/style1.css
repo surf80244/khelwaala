@@ -185,7 +185,17 @@ footer p a{
     form{
     	margin-top: 200px;
     }
+    .logo{
+    	background-color: #000;
+    	border-radius: 10px;
+    }
+    footer p a {
+    text-decoration: none;
+    color: #fff;
+    margin: 0px 20px;
+    display: block;
+    margin: 15px 0;
 }
-
+}
 
 
